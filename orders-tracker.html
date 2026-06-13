@@ -1,0 +1,851 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>تتبع الطلبات</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@500;700;800&family=Tajawal:wght@400;500;700&display=swap" rel="stylesheet">
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+<style>
+  :root {
+    --navy: #1E2A45;
+    --navy-light: #2F4066;
+    --amber: #F2A93B;
+    --amber-light: #FCE7C2;
+    --cream: #FAF7F2;
+    --green: #2FAE6B;
+    --green-light: #DCF5E7;
+    --slate: #64748B;
+    --line: #E7E2D9;
+    --white: #FFFFFF;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Tajawal', sans-serif;
+    background: var(--cream);
+    color: var(--navy);
+    min-height: 100vh;
+    padding: 0 0 60px;
+  }
+
+  .hero {
+    background: linear-gradient(135deg, var(--navy) 0%, var(--navy-light) 100%);
+    color: var(--white);
+    padding: 36px 20px 60px;
+    border-radius: 0 0 32px 32px;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+  }
+  .hero::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background-image: radial-gradient(circle at 15% 25%, rgba(242,169,59,0.18) 0, transparent 35%),
+                       radial-gradient(circle at 85% 75%, rgba(242,169,59,0.12) 0, transparent 40%);
+  }
+  .hero-icon {
+    width: 56px; height: 56px;
+    background: var(--amber);
+    border-radius: 16px;
+    display: flex; align-items: center; justify-content: center;
+    margin: 0 auto 14px;
+    position: relative; z-index: 1;
+    box-shadow: 0 8px 20px rgba(242,169,59,0.35);
+  }
+  .hero-icon svg { color: var(--navy); width: 28px; height: 28px; }
+  .hero h1 {
+    font-family: 'Cairo', sans-serif;
+    font-weight: 800;
+    font-size: 26px;
+    position: relative; z-index: 1;
+  }
+  .hero p {
+    margin-top: 6px;
+    font-size: 14px;
+    color: #C9D2E8;
+    position: relative; z-index: 1;
+  }
+
+  .container {
+    max-width: 720px;
+    margin: -34px auto 0;
+    padding: 0 16px;
+    position: relative;
+    z-index: 2;
+  }
+
+  .greeting-card {
+    background: var(--white);
+    border-radius: 18px;
+    padding: 18px 20px;
+    display: none;
+    align-items: center;
+    gap: 14px;
+    box-shadow: 0 10px 30px rgba(30,42,69,0.08);
+    margin-bottom: 18px;
+  }
+  .greeting-card.show { display: flex; }
+  .greeting-avatar {
+    width: 46px; height: 46px;
+    border-radius: 50%;
+    background: var(--amber-light);
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+  }
+  .greeting-avatar svg { color: var(--amber); width: 22px; height: 22px; }
+  .greeting-card h2 {
+    font-family: 'Cairo', sans-serif;
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--navy);
+  }
+  .greeting-card span {
+    font-size: 12px;
+    color: var(--slate);
+  }
+
+  .section-label {
+    font-family: 'Cairo', sans-serif;
+    font-weight: 700;
+    font-size: 14px;
+    color: var(--navy);
+    display: flex; align-items: center; gap: 8px;
+    margin: 22px 0 12px;
+  }
+  .section-label svg { width: 18px; height: 18px; color: var(--amber); }
+
+  .order-card {
+    background: var(--white);
+    border-radius: 18px;
+    padding: 18px 20px;
+    margin-bottom: 14px;
+    box-shadow: 0 6px 20px rgba(30,42,69,0.06);
+    border: 1px solid var(--line);
+  }
+  .order-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 14px;
+  }
+  .order-id-wrap { display: flex; align-items: center; gap: 10px; }
+  .order-id-icon {
+    width: 38px; height: 38px;
+    border-radius: 12px;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+    background: var(--amber-light);
+    color: var(--amber);
+  }
+  .order-card.delivered .order-id-icon {
+    background: var(--green-light);
+    color: var(--green);
+  }
+  .order-id-icon svg { width: 18px; height: 18px; }
+  .order-id {
+    font-family: 'Cairo', sans-serif;
+    font-weight: 700;
+    font-size: 15px;
+    color: var(--navy);
+  }
+  .order-sub { font-size: 12px; color: var(--slate); margin-top: 2px; }
+
+  .status {
+    display: flex; align-items: center; gap: 6px;
+    padding: 6px 12px;
+    border-radius: 30px;
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--amber);
+    background: var(--amber-light);
+    white-space: nowrap;
+  }
+  .status.delivered { color: var(--green); background: var(--green-light); }
+  .status svg { width: 14px; height: 14px; }
+
+  .progress-track {
+    display: flex;
+    align-items: center;
+    margin: 14px 0 6px;
+    padding: 0 4px;
+  }
+  .progress-step {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    position: relative;
+  }
+  .progress-step .dot {
+    width: 26px; height: 26px;
+    border-radius: 50%;
+    background: var(--line);
+    display: flex; align-items: center; justify-content: center;
+    color: var(--white);
+    z-index: 2;
+    transition: background 0.3s;
+  }
+  .progress-step .dot svg { width: 13px; height: 13px; }
+  .progress-step.active .dot { background: var(--amber); }
+  .progress-step.done .dot { background: var(--green); }
+  .progress-step .label {
+    font-size: 11px;
+    color: var(--slate);
+    margin-top: 6px;
+    text-align: center;
+  }
+  .progress-step.active .label,
+  .progress-step.done .label { color: var(--navy); font-weight: 700; }
+  .progress-line {
+    position: absolute;
+    top: 13px;
+    height: 2px;
+    background: var(--line);
+    z-index: 1;
+    left: -50%;
+    right: 50%;
+  }
+  .progress-step:first-child .progress-line { display: none; }
+  .progress-step.done .progress-line,
+  .progress-step.active .progress-line { background: var(--green); }
+
+  .detail-row {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    font-size: 13px;
+    color: var(--slate);
+    margin-top: 8px;
+    padding-top: 8px;
+    border-top: 1px dashed var(--line);
+  }
+  .detail-row svg { width: 15px; height: 15px; flex-shrink: 0; margin-top: 1px; color: var(--navy-light); }
+  .detail-row b { color: var(--navy); font-weight: 700; }
+
+  .state-card {
+    background: var(--white);
+    border-radius: 18px;
+    padding: 40px 20px;
+    text-align: center;
+    box-shadow: 0 6px 20px rgba(30,42,69,0.06);
+    border: 1px solid var(--line);
+  }
+  .state-card .state-icon {
+    width: 56px; height: 56px;
+    border-radius: 50%;
+    background: var(--amber-light);
+    display: flex; align-items: center; justify-content: center;
+    margin: 0 auto 14px;
+    color: var(--amber);
+  }
+  .state-card.error .state-icon { background: #FBE3E1; color: #E0594A; }
+  .state-card .state-icon svg { width: 26px; height: 26px; }
+  .state-card h3 {
+    font-family: 'Cairo', sans-serif;
+    font-size: 16px;
+    margin-bottom: 6px;
+    color: var(--navy);
+  }
+  .state-card p { font-size: 13px; color: var(--slate); line-height: 1.7; }
+  .spin svg { animation: spin 1s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .admin-toggle {
+    text-align: center;
+    margin-top: 30px;
+  }
+  .admin-toggle button {
+    background: none;
+    border: 1px solid var(--line);
+    color: var(--slate);
+    font-size: 12px;
+    font-family: 'Tajawal', sans-serif;
+    padding: 8px 16px;
+    border-radius: 30px;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .admin-toggle button:hover { border-color: var(--amber); color: var(--navy); }
+  .admin-toggle button svg { width: 14px; height: 14px; }
+
+  .admin-section { display: none; margin-top: 18px; }
+  .admin-section.show { display: block; }
+
+  .panel {
+    background: var(--white);
+    border-radius: 18px;
+    padding: 22px 20px;
+    margin-bottom: 16px;
+    box-shadow: 0 6px 20px rgba(30,42,69,0.06);
+    border: 1px solid var(--line);
+  }
+  .panel-title {
+    font-family: 'Cairo', sans-serif;
+    font-weight: 800;
+    font-size: 16px;
+    display: flex; align-items: center; gap: 10px;
+    margin-bottom: 16px;
+    color: var(--navy);
+  }
+  .panel-title .ic {
+    width: 34px; height: 34px;
+    border-radius: 10px;
+    background: var(--navy);
+    color: var(--amber);
+    display: flex; align-items: center; justify-content: center;
+  }
+  .panel-title .ic svg { width: 16px; height: 16px; }
+
+  .field { margin-bottom: 12px; }
+  .field label {
+    display: flex; align-items: center; gap: 6px;
+    font-size: 13px; font-weight: 700; color: var(--navy);
+    margin-bottom: 5px;
+  }
+  .field label svg { width: 14px; height: 14px; color: var(--slate); }
+  .field input, .field select, .field textarea {
+    width: 100%;
+    padding: 10px 12px;
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    font-size: 14px;
+    font-family: inherit;
+    background: var(--cream);
+    color: var(--navy);
+    transition: border-color 0.2s;
+  }
+  .field input:focus, .field select:focus, .field textarea:focus {
+    outline: none;
+    border-color: var(--amber);
+    background: var(--white);
+  }
+  .field-row { display: flex; gap: 10px; }
+  .field-row .field { flex: 1; }
+
+  .btn-row { display: flex; gap: 10px; margin-top: 6px; flex-wrap: wrap; }
+  .btn {
+    display: inline-flex; align-items: center; gap: 8px;
+    padding: 11px 20px;
+    border: none;
+    border-radius: 10px;
+    font-size: 14px;
+    font-weight: 700;
+    font-family: 'Tajawal', sans-serif;
+    cursor: pointer;
+    transition: transform 0.1s, box-shadow 0.2s;
+  }
+  .btn svg { width: 16px; height: 16px; }
+  .btn:active { transform: scale(0.97); }
+  .btn-primary { background: var(--navy); color: var(--white); box-shadow: 0 6px 16px rgba(30,42,69,0.25); }
+  .btn-primary:hover { background: var(--navy-light); }
+  .btn-secondary { background: var(--cream); color: var(--navy); border: 1px solid var(--line); }
+  .btn-secondary:hover { border-color: var(--amber); }
+  .btn-danger { background: #FBE3E1; color: #C0392B; }
+  .btn-danger:hover { background: #F8D2CF; }
+  .btn-amber { background: var(--amber); color: var(--navy); box-shadow: 0 6px 16px rgba(242,169,59,0.3); }
+  .btn-sm { padding: 7px 12px; font-size: 12px; border-radius: 8px; }
+
+  .form-msg {
+    margin-top: 12px;
+    font-size: 13px;
+    font-weight: 700;
+    display: flex; align-items: center; gap: 6px;
+  }
+  .form-msg svg { width: 15px; height: 15px; }
+  .form-msg.success { color: var(--green); }
+  .form-msg.error { color: #C0392B; }
+
+  .table-wrap { overflow-x: auto; margin-top: 16px; border-radius: 12px; border: 1px solid var(--line); }
+  table { width: 100%; border-collapse: collapse; font-size: 12.5px; }
+  th, td { padding: 10px 12px; text-align: right; white-space: nowrap; }
+  th {
+    background: var(--navy);
+    color: var(--white);
+    font-family: 'Cairo', sans-serif;
+    font-weight: 700;
+    font-size: 12px;
+  }
+  tbody tr:nth-child(even) { background: var(--cream); }
+  tbody tr:hover { background: var(--amber-light); }
+  td .status { font-size: 11px; padding: 4px 10px; }
+  .table-actions { display: flex; gap: 6px; }
+
+  .link-result {
+    display: none;
+    margin-top: 16px;
+    background: var(--cream);
+    border: 1px dashed var(--amber);
+    border-radius: 12px;
+    padding: 14px;
+  }
+  .link-result.show { display: block; }
+  .link-result-title {
+    display: flex; align-items: center; gap: 6px;
+    font-size: 13px; font-weight: 700; color: var(--navy);
+    margin-bottom: 8px;
+  }
+  .link-result-title svg { width: 15px; height: 15px; color: var(--amber); }
+  .link-box {
+    display: flex; align-items: center; gap: 8px;
+    background: var(--white);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    padding: 8px 10px;
+  }
+  .link-box code {
+    flex: 1;
+    font-size: 12px;
+    color: var(--navy-light);
+    word-break: break-all;
+    direction: ltr;
+    text-align: left;
+  }
+  .copy-btn {
+    background: var(--navy);
+    color: var(--white);
+    border: none;
+    border-radius: 6px;
+    padding: 6px 10px;
+    cursor: pointer;
+    display: flex; align-items: center;
+    flex-shrink: 0;
+  }
+  .copy-btn svg { width: 14px; height: 14px; }
+
+  @media (max-width: 480px) {
+    .hero h1 { font-size: 21px; }
+    .field-row { flex-direction: column; }
+    .order-header { flex-wrap: wrap; gap: 8px; }
+  }
+</style>
+</head>
+<body>
+
+  <div class="hero">
+    <div class="hero-icon"><i data-lucide="package-search"></i></div>
+    <h1>تتبع الطلبات</h1>
+    <p>تابع حالة طلباتك وتاريخ التسليم المتوقع بكل سهولة</p>
+  </div>
+
+  <div class="container">
+
+    <div id="customer-section">
+      <div class="greeting-card" id="greeting-card">
+        <div class="greeting-avatar"><i data-lucide="user-round"></i></div>
+        <div>
+          <h2 id="customer-name"></h2>
+          <span id="orders-count"></span>
+        </div>
+      </div>
+
+      <div class="section-label" id="orders-section-label" style="display:none;">
+        <i data-lucide="boxes"></i> طلباتك
+      </div>
+
+      <div id="orders-list"></div>
+    </div>
+
+    <div class="admin-toggle">
+      <button onclick="toggleAdmin()">
+        <i data-lucide="settings"></i> لوحة التحكم (للإدارة)
+      </button>
+    </div>
+
+    <div id="admin-section" class="admin-section">
+
+      <div class="panel">
+        <div class="panel-title">
+          <div class="ic"><i data-lucide="plus-circle"></i></div>
+          <span id="form-title">إضافة طلب جديد</span>
+        </div>
+        <input type="hidden" id="rowIndex" value="">
+
+        <div class="field-row">
+          <div class="field">
+            <label><i data-lucide="hash"></i> كود العميل</label>
+            <input type="text" id="customerCode" placeholder="مثال: C001">
+          </div>
+          <div class="field">
+            <label><i data-lucide="user"></i> اسم العميل</label>
+            <input type="text" id="customerNameInput" placeholder="مثال: أحمد محمد">
+          </div>
+        </div>
+
+        <div class="field-row">
+          <div class="field">
+            <label><i data-lucide="package"></i> رقم الطلب</label>
+            <input type="text" id="orderId" placeholder="مثال: ORD-1001">
+          </div>
+          <div class="field">
+            <label><i data-lucide="calendar-clock"></i> تاريخ التسليم المتوقع</label>
+            <input type="date" id="expectedDeliveryDate">
+          </div>
+        </div>
+
+        <div class="field">
+          <label><i data-lucide="activity"></i> الحالة</label>
+          <select id="status">
+            <option value="قيد التجهيز">⏳ قيد التجهيز</option>
+            <option value="تم التسليم">✅ تم التسليم</option>
+          </select>
+        </div>
+
+        <div class="field">
+          <label><i data-lucide="message-square"></i> ملاحظات</label>
+          <textarea id="notes" rows="2" placeholder="اختياري"></textarea>
+        </div>
+
+        <div class="btn-row">
+          <button class="btn btn-primary" onclick="saveOrder()"><i data-lucide="save"></i> حفظ الطلب</button>
+          <button class="btn btn-secondary" onclick="resetForm()"><i data-lucide="rotate-ccw"></i> طلب جديد</button>
+        </div>
+        <div id="form-msg" class="form-msg"></div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-title">
+          <div class="ic"><i data-lucide="search"></i></div>
+          <span>بحث عن طلبات عميل</span>
+        </div>
+
+        <div class="field-row">
+          <div class="field" style="flex:2;">
+            <label><i data-lucide="hash"></i> كود العميل</label>
+            <input type="text" id="searchCode" placeholder="مثال: C001">
+          </div>
+          <div class="field" style="flex:1; align-self:flex-end;">
+            <button class="btn btn-amber" style="width:100%; justify-content:center;" onclick="searchOrders()">
+              <i data-lucide="search"></i> بحث
+            </button>
+          </div>
+        </div>
+
+        <div class="table-wrap">
+          <table id="orders-table" style="display:none;">
+            <thead>
+              <tr>
+                <th>رقم الطلب</th>
+                <th>الحالة</th>
+                <th>تاريخ التسليم</th>
+                <th>ملاحظات</th>
+                <th>إجراءات</th>
+              </tr>
+            </thead>
+            <tbody id="orders-table-body"></tbody>
+          </table>
+        </div>
+
+        <div class="link-result" id="link-result">
+          <div class="link-result-title"><i data-lucide="link"></i> رابط العميل (شاركه معه)</div>
+          <div class="link-box">
+            <code id="link-box"></code>
+            <button class="copy-btn" onclick="copyLink()"><i data-lucide="copy"></i></button>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+<script>
+  const API_URL = "https://script.google.com/macros/s/AKfycbwfUFrU4R6EdMM9OWZWOl2t81YoeWPs-PiY4ZLj7fihu_HzNssAPFtQ0DnxmpHfvI_q_A/exec";
+
+  function icons() { lucide.createIcons(); }
+
+  function getQueryParam(name) {
+    const params = new URLSearchParams(window.location.search);
+    return params.get(name);
+  }
+
+  function isDelivered(status) {
+    return status === "تم التسليم";
+  }
+
+  function progressTrack(status) {
+    const delivered = isDelivered(status);
+    return `
+      <div class="progress-track">
+        <div class="progress-step done">
+          <div class="progress-line"></div>
+          <div class="dot"><i data-lucide="check"></i></div>
+          <div class="label">تم الطلب</div>
+        </div>
+        <div class="progress-step ${delivered ? 'done' : 'active'}">
+          <div class="progress-line"></div>
+          <div class="dot"><i data-lucide="${delivered ? 'check' : 'loader'}"></i></div>
+          <div class="label">قيد التجهيز</div>
+        </div>
+        <div class="progress-step ${delivered ? 'done' : ''}">
+          <div class="progress-line"></div>
+          <div class="dot"><i data-lucide="${delivered ? 'check' : 'truck'}"></i></div>
+          <div class="label">تم التسليم</div>
+        </div>
+      </div>
+    `;
+  }
+
+  async function loadCustomerOrders() {
+    const code = getQueryParam("code");
+    const ordersList = document.getElementById("orders-list");
+
+    if (!code) {
+      ordersList.innerHTML = `
+        <div class="state-card">
+          <div class="state-icon"><i data-lucide="link-2-off"></i></div>
+          <h3>لا يوجد رابط محدد</h3>
+          <p>افتح هذه الصفحة عبر الرابط الخاص بك الذي أرسلته لك الإدارة، وهو يحتوي على كود عميل مميز.</p>
+        </div>`;
+      icons();
+      return;
+    }
+
+    ordersList.innerHTML = `
+      <div class="state-card spin">
+        <div class="state-icon"><i data-lucide="loader-circle"></i></div>
+        <h3>جاري تحميل طلباتك...</h3>
+        <p>برجاء الانتظار قليلاً</p>
+      </div>`;
+    icons();
+
+    try {
+      const res = await fetch(`${API_URL}?action=getOrders&code=${encodeURIComponent(code)}`);
+      const data = await res.json();
+
+      if (!data.success) {
+        ordersList.innerHTML = `
+          <div class="state-card error">
+            <div class="state-icon"><i data-lucide="alert-triangle"></i></div>
+            <h3>حدث خطأ</h3>
+            <p>${data.message || "تعذر تحميل البيانات"}</p>
+          </div>`;
+        icons();
+        return;
+      }
+
+      if (data.orders.length === 0) {
+        ordersList.innerHTML = `
+          <div class="state-card">
+            <div class="state-icon"><i data-lucide="package-open"></i></div>
+            <h3>لا توجد طلبات بعد</h3>
+            <p>لم يتم تسجيل أي طلبات لهذا الحساب حتى الآن.</p>
+          </div>`;
+        icons();
+        return;
+      }
+
+      const greeting = document.getElementById("greeting-card");
+      document.getElementById("customer-name").textContent = `أهلاً، ${data.customerName}`;
+      document.getElementById("orders-count").textContent = `لديك ${data.orders.length} ${data.orders.length === 1 ? 'طلب' : 'طلبات'}`;
+      greeting.classList.add("show");
+      document.getElementById("orders-section-label").style.display = "flex";
+
+      ordersList.innerHTML = data.orders.map(order => {
+        const delivered = isDelivered(order.status);
+        return `
+        <div class="order-card ${delivered ? 'delivered' : ''}">
+          <div class="order-header">
+            <div class="order-id-wrap">
+              <div class="order-id-icon"><i data-lucide="${delivered ? 'package-check' : 'package'}"></i></div>
+              <div>
+                <div class="order-id">طلب #${order.orderId}</div>
+                <div class="order-sub">${order.customerName}</div>
+              </div>
+            </div>
+            <div class="status ${delivered ? 'delivered' : ''}">
+              <i data-lucide="${delivered ? 'check-circle-2' : 'clock'}"></i>
+              ${order.status}
+            </div>
+          </div>
+
+          ${progressTrack(order.status)}
+
+          ${order.expectedDeliveryDate ? `
+          <div class="detail-row">
+            <i data-lucide="calendar-clock"></i>
+            <span><b>تاريخ التسليم المتوقع:</b> ${order.expectedDeliveryDate}</span>
+          </div>` : ''}
+
+          ${order.notes ? `
+          <div class="detail-row">
+            <i data-lucide="message-square-text"></i>
+            <span>${order.notes}</span>
+          </div>` : ''}
+        </div>
+        `;
+      }).join("");
+      icons();
+
+    } catch (err) {
+      ordersList.innerHTML = `
+        <div class="state-card error">
+          <div class="state-icon"><i data-lucide="wifi-off"></i></div>
+          <h3>تعذر الاتصال بالخادم</h3>
+          <p>تأكد من إعداد رابط الـ API بشكل صحيح في الصفحة.</p>
+        </div>`;
+      icons();
+    }
+  }
+
+  function toggleAdmin() {
+    document.getElementById("admin-section").classList.toggle("show");
+  }
+
+  function resetForm() {
+    document.getElementById("rowIndex").value = "";
+    document.getElementById("customerCode").value = "";
+    document.getElementById("customerNameInput").value = "";
+    document.getElementById("orderId").value = "";
+    document.getElementById("status").value = "قيد التجهيز";
+    document.getElementById("expectedDeliveryDate").value = "";
+    document.getElementById("notes").value = "";
+    document.getElementById("form-title").textContent = "إضافة طلب جديد";
+    document.getElementById("form-msg").innerHTML = "";
+  }
+
+  async function saveOrder() {
+    const rowIndex = document.getElementById("rowIndex").value;
+    const payload = {
+      action: rowIndex ? "updateOrder" : "addOrder",
+      rowIndex: rowIndex ? parseInt(rowIndex) : undefined,
+      customerCode: document.getElementById("customerCode").value.trim(),
+      customerName: document.getElementById("customerNameInput").value.trim(),
+      orderId: document.getElementById("orderId").value.trim(),
+      status: document.getElementById("status").value,
+      expectedDeliveryDate: document.getElementById("expectedDeliveryDate").value,
+      notes: document.getElementById("notes").value.trim()
+    };
+
+    const msgEl = document.getElementById("form-msg");
+    msgEl.innerHTML = `<i data-lucide="loader-circle" class="spin"></i> جاري الحفظ...`;
+    msgEl.className = "form-msg";
+    icons();
+
+    try {
+      const res = await fetch(API_URL, {
+        method: "POST",
+        body: JSON.stringify(payload)
+      });
+      const data = await res.json();
+      msgEl.innerHTML = `<i data-lucide="${data.success ? 'check-circle-2' : 'x-circle'}"></i> ${data.message}`;
+      msgEl.className = data.success ? "form-msg success" : "form-msg error";
+      icons();
+
+      if (data.success) {
+        resetForm();
+        if (payload.customerCode) showCustomerLink(payload.customerCode);
+        const searchCode = document.getElementById("searchCode").value.trim();
+        if (searchCode) searchOrders();
+      }
+    } catch (err) {
+      msgEl.innerHTML = `<i data-lucide="wifi-off"></i> تعذر الاتصال بالخادم. تأكد من رابط الـ API.`;
+      msgEl.className = "form-msg error";
+      icons();
+    }
+  }
+
+  function showCustomerLink(code) {
+    const baseUrl = window.location.href.split("?")[0];
+    const link = `${baseUrl}?code=${encodeURIComponent(code)}`;
+    document.getElementById("link-box").textContent = link;
+    document.getElementById("link-result").classList.add("show");
+  }
+
+  function copyLink() {
+    const text = document.getElementById("link-box").textContent;
+    navigator.clipboard.writeText(text).then(() => {
+      const btn = document.querySelector(".copy-btn");
+      btn.innerHTML = `<i data-lucide="check"></i>`;
+      icons();
+      setTimeout(() => { btn.innerHTML = `<i data-lucide="copy"></i>`; icons(); }, 1500);
+    });
+  }
+
+  async function searchOrders() {
+    const code = document.getElementById("searchCode").value.trim();
+    if (!code) return;
+
+    try {
+      const res = await fetch(`${API_URL}?action=getOrders&code=${encodeURIComponent(code)}`);
+      const data = await res.json();
+
+      const table = document.getElementById("orders-table");
+      const tbody = document.getElementById("orders-table-body");
+
+      if (!data.success || data.orders.length === 0) {
+        table.style.display = "none";
+        alert("لا توجد طلبات لهذا الكود");
+        return;
+      }
+
+      tbody.innerHTML = data.orders.map(o => {
+        const delivered = isDelivered(o.status);
+        return `
+        <tr>
+          <td><b>${o.orderId}</b></td>
+          <td>
+            <span class="status ${delivered ? 'delivered' : ''}">
+              <i data-lucide="${delivered ? 'check-circle-2' : 'clock'}"></i> ${o.status}
+            </span>
+          </td>
+          <td>${o.expectedDeliveryDate || "—"}</td>
+          <td>${o.notes || "—"}</td>
+          <td>
+            <div class="table-actions">
+              <button class="btn btn-secondary btn-sm" onclick='editOrder(${JSON.stringify(o)})'><i data-lucide="pencil"></i> تعديل</button>
+              <button class="btn btn-danger btn-sm" onclick="deleteOrder(${o.rowIndex})"><i data-lucide="trash-2"></i> حذف</button>
+            </div>
+          </td>
+        </tr>`;
+      }).join("");
+
+      table.style.display = "table";
+      icons();
+      showCustomerLink(code);
+
+    } catch (err) {
+      alert("تعذر الاتصال بالخادم.");
+    }
+  }
+
+  function editOrder(order) {
+    document.getElementById("rowIndex").value = order.rowIndex;
+    document.getElementById("customerCode").value = order.customerCode;
+    document.getElementById("customerNameInput").value = order.customerName;
+    document.getElementById("orderId").value = order.orderId;
+    document.getElementById("status").value = order.status;
+    document.getElementById("expectedDeliveryDate").value = order.expectedDeliveryDate;
+    document.getElementById("notes").value = order.notes;
+    document.getElementById("form-title").textContent = "تعديل الطلب";
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }
+
+  async function deleteOrder(rowIndex) {
+    if (!confirm("هل أنت متأكد من حذف هذا الطلب؟")) return;
+
+    try {
+      const res = await fetch(API_URL, {
+        method: "POST",
+        body: JSON.stringify({ action: "deleteOrder", rowIndex })
+      });
+      const data = await res.json();
+      if (data.success) {
+        searchOrders();
+      } else {
+        alert(data.message);
+      }
+    } catch (err) {
+      alert("تعذر الاتصال بالخادم.");
+    }
+  }
+
+  icons();
+  loadCustomerOrders();
+</script>
+</body>
+</html>
